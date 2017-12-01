@@ -1,0 +1,31 @@
+#!/bin/bash
+source=$1
+if [[ -z $source ]]; then
+  echo "No source"
+  exit 1
+fi
+folder=/tmp/$source/
+if [[ -f $folder ]]; then
+  rm -r $folder
+fi
+mkdir -p $folder
+
+
+convert -resize 100x100 ${source} ${folder}/${source}_100.png
+width=$(file ${folder}/${source}_100.png | sed 's/.* \([0-9]*\) x [0-9]*,.*/\1/')
+height=$(file ${folder}/${source}_100.png | sed 's/.* [0-9]* x \([0-9]*\),.*/\1/')
+add_width=$((100 - $width))
+add_height=$((100 - $height))
+add_width=$(($add_width / 2))
+add_height=$(($add_height / 2))
+convert -border ${add_width}x${add_height} -bordercolor transparent ${folder}/${source}_100.png ${folder}/${source}_100_square.png
+
+angle_step=5
+angle=0
+while [[ $angle -lt 360 ]]; do
+  convert ${folder}/${source}_100_square.png -distort SRT $angle $folder/rotated-${source}-${angle}.png
+  angle=$(($angle + $angle_step))
+done
+
+convert -delay 1 -dispose Background -loop 0 $(ls -rt ${folder}/rotated-*.png) ${source}.gif;
+convert -resize 32x32 ${source}.gif ${source}_32.gif

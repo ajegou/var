@@ -1,0 +1,35 @@
+#!/bin/bash
+
+if [[ -z $1 || -z $2 ]]; then
+  echo "Specify 2 directories";
+  exit 1
+fi
+if [[ ! -z $3 ]]; then
+  echo "Too many parameters";
+  exit 2
+fi
+
+content=$(rsync -avn "$1" "$2" --delete)
+echo "$content" | less
+
+nblines=$(echo "$content" | wc -l)
+if [[ $nblines -eq 4 ]]; then
+  echo "Directories appear to be in sync"
+  exit 0
+fi
+
+read -p "Confirm sync (y/n)? " choice
+echo
+if [[ $choice != [Yy] ]]; then
+  echo "Cancelled"
+  exit 0
+fi
+
+read -p "Are you sure (y/n)? " choice
+echo
+if [[ $choice != [Yy] ]]; then
+  echo "Cancelled"
+  exit 0
+fi
+
+rsync -av "$1" "$2" --delete

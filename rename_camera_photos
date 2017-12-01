@@ -1,0 +1,14 @@
+#!/bin/bash
+# Rename jpg using their timestamp, with the format "2016-11-05 16.35.12.jpg"
+
+ls ./*JPG | while read photo; do
+  renamed=$(echo "$photo" | sed 's/.JPG$/.jpg/')
+  mv "$photo" "$renamed"
+done
+
+ls ./*jpg | while read photo; do
+  exiv2 -r'%Y-%m-%d %H.%M.%S' -F rename "$photo"
+done
+
+ls
+
