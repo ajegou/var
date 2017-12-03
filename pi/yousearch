@@ -17,7 +17,6 @@ fi
 # crawl
 index=1
 while read line; do
- # echo "Reading line: $line"
   url=$(echo $line | sed 's/.*href="\([^"]*\)".*/\1/')
   title=$(echo $line | sed 's/ title=/\ntitle=/g' | grep 'title=' | head -n 1 | sed 's/.*title="\([^"]*\)".*/\1/')
   duration=$(echo $line | grep "Duration" | sed 's/.*Duration: \([^\.,]*\).*/\1/')
