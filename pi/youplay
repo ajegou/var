@@ -3,29 +3,4 @@ src=$1
 
 # play
 omxplayer -b -o local $(youtube-dl -g "$src")
-
-# crawl
-echo "Looking up linked videos for '$src'"
-index=1
-while read link; do
-  url=$(echo $link | sed 's/.*href="\([^"]*\)".*/\1/')
-  title=$(echo $link | sed 's/.*title="\([^"]*\)".*/\1/')
-  if [[ -z $title ]]; then
-    echo "Failed extraction from: $link"
-  else
-    fullurl="https://www.youtube.com"$url
-    links[$index]="$fullurl"
-    echo -e "[$index]\t$title\t$fullurl\n"
-    index=$(($index + 1))
-  fi
-done < <(curl --silent "$src" | grep 'content-link')
-
-read -p 'Watchiou wanna see? ' index
-
-link=${links[$index]}
-if [[ ! -z $link ]]; then
-  echo "Opening: $link"
-  $0 "$link"
-else
-  echo "Could not find an entry for '$index'"
-fi
+yousearch $1

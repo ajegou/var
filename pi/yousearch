@@ -1,0 +1,44 @@
+#!/bin/bash
+
+query=$@
+
+if [[ -z $query ]]; then
+  exit 1
+fi
+
+if [[ "$query" == *youtube.com* ]]; then
+  echo "Looking up videos from page: '$query'"
+  search_url=$query
+else
+  echo "Searching videos for: '$query'"
+  search_url="https://www.youtube.com/results?search_query="$(echo $query | sed 's/ /%20/g') # would be good to properly encode the query
+fi
+
+# crawl
+index=1
+while read link; do
+  url=$(echo $link | sed 's/.*href="\([^"]*\)".*/\1/')
+  title=$(echo $link | sed 's/.*title="\([^"]*\)".*/\1/')
+  if [[ -z $title ]]; then
+    echo "Failed extraction from: $link"
+  else
+    fullurl="https://www.youtube.com"$url
+    links[$index]="$fullurl"
+    echo -e "[$index]\t$title\t$fullurl"
+    index=$(($index + 1))
+  fi
+done < <(curl --silent "$search_url" | sed 's/>/>\n/g' | egrep 'content-link|yt-uix-tile-link')
+
+read -p 'Watchiou wanna see? ' index
+
+link=${links[$index]}
+if [[ -z $link ]]; then
+  echo "Could not find an entry for '$index'"
+fi
+
+echo "Opening: $link"
+if [[ $link == */watch* ]]; then
+  youplay $link
+else
+  yousearch $link
+fi
