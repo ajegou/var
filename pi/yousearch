@@ -16,18 +16,20 @@ fi
 
 # crawl
 index=1
-while read link; do
-  url=$(echo $link | sed 's/.*href="\([^"]*\)".*/\1/')
-  title=$(echo $link | sed 's/.*title="\([^"]*\)".*/\1/')
+while read line; do
+ # echo "Reading line: $line"
+  url=$(echo $line | sed 's/.*href="\([^"]*\)".*/\1/')
+  title=$(echo $line | sed 's/ title=/\ntitle=/g' | grep 'title=' | head -n 1 | sed 's/.*title="\([^"]*\)".*/\1/')
+  duration=$(echo $line | grep "Duration" | sed 's/.*Duration: \([^\.,]*\).*/\1/')
   if [[ -z $title ]]; then
-    echo "Failed extraction from: $link"
+    echo "Failed extraction from: $line"
   else
     fullurl="https://www.youtube.com"$url
     links[$index]="$fullurl"
-    echo -e "[$index]\t$title\t$fullurl"
+    echo -e "[$index]\t$fullurl\t$duration\t$title"
     index=$(($index + 1))
   fi
-done < <(curl --silent "$search_url" | sed 's/>/>\n/g' | egrep 'content-link|yt-uix-tile-link')
+done < <(curl --silent --header 'Accept-Language: en' "$search_url" | tr -d '\n' | sed 's;<div;\n<div;g' | egrep '"content-wrapper"|yt-lockup-content') # put newlines after each closing div and remove others
 
 read -p 'Watchiou wanna see? ' index
 
