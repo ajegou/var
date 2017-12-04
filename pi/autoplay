@@ -1,0 +1,20 @@
+#!/bin/bash
+#complete -f -X '!*.@(avi|mkv|mp4|mov|ogm|mpg|divx)' -o plusdirs autoplay
+
+current_episode="$@"
+if [[ "$current_episode" =~ .*[0-9]+x[0-9]+.* ]]; then
+  while [[ -f $current_episode ]]; do
+    echo Playing $current_episode
+    play "$current_episode"
+
+    episode_number=$(echo "$current_episode" | sed 's/.*[0-9]*x\([0-9]*\)\..*/\1/')
+    next_episode=$(($episode_number + 1))
+    # Padd the episode number with zeros to match the original episode
+    while [[ ${#episode_number} -gt ${#next_episode} ]]; do
+      next_episode="0"$next_episode
+    done
+    current_episode=$(echo "$current_episode" | sed "s/\([0-9]*\)x\([0-9]*\)\./\1x${next_episode}./")
+  done
+else
+  play "$file_name"
+fi
