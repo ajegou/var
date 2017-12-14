@@ -1,34 +1,137 @@
 #!/bin/bash
 
+# Truncate strings that are too long, and space padd the ones that are too short
+function truncate_and_padd() {
+  allign=$1
+  size=$2
+  shift 2
+  text=$*
+  if [[ ${#text} -gt $size ]]; then
+    truncto=$(($size - 3))
+    text="${text:0:$truncto}..."
+  else
+    # It seems printf padding doesn't do well with special characters, so we compute the number of spaces by hand
+    padding=$(($size - ${#text}))
+    if [[ $allign == r ]]; then
+      #text=$(printf "%-${size}s" "$text")
+      text=$text$(printf "%-${padding}s" "")
+    else
+      #text=$(printf "%${size}s" "$text")
+      text=$(printf "%-${padding}s" "")$text
+    fi
+  fi
+  echo "$text"
+}
+
+function decode_html_characters() {
+ echo $* | perl -MHTML::Entities -pe 'decode_entities($_);'
+}
+
+function extract_title() {
+  # Using string(//a/@title) causes some improper decoding of the title, so we have to use //a/@title and get the text by hand
+  title=$(echo $* | xmllint --html --xpath '//a/@title' -)
+  title=$(echo $title | sed 's/^title="\(.*\)"$/\1/')
+  # Remove trailing spaces
+  title=$(echo $title | sed 's/^ *//' | sed 's/ *$//')
+  echo "$title"
+}
+
+function extract_url() {
+  url="https://www.youtube.com"$(echo $* | xmllint --html --xpath 'string(//a/@href)' -)
+  echo $url
+}
+
+function extract_duration() {
+  duration=$(echo $* | xmllint --html --xpath 'string(//span[@class="accessible-description"])' -)
+  duration=$(echo $duration | grep 'Duration')
+  duration=$(echo $duration | sed 's/.*Duration: //' | sed 's/. *$//')
+  if [[ $duration != *:[0-9]* ]]; then
+    hours=$(echo $duration | grep -o '[0-9] hour' | sed 's_ hour__' | xargs printf "%02d")
+    minutes=$(echo $duration | grep -o '[0-9]* minute' | sed 's_ minute__' | xargs printf "%02d")
+    seconds=$(echo $duration | grep -o '[0-9]* second' | sed 's_ second__' | xargs printf "%02d")
+    if [[ $hours -gt 0 ]]; then
+      duration=${hours}:${minutes}:${seconds}
+    else
+      duration=${minutes}:${seconds}
+    fi
+  fi
+  echo "$duration"
+}
+
+function extract_user() {
+  if [[ $mode == user ]]; then
+    user=$(echo $query | sed 's;.*user/;;')
+  elif [[ $mode == search ]]; then
+    user=$(echo $* | xmllint --html --xpath '//div[@class="yt-lockup-byline "]/a/text()' -)
+  else
+    user=$(echo $* | xmllint --html --xpath '//span[@class="stat attribution"]/span/text()' -)
+  fi
+  echo "$user"
+}
+
+
+# Start here
 query=$@
 
 if [[ -z $query ]]; then
   exit 1
 fi
 
-if [[ "$query" == *youtube.com* ]]; then
+if [[ "$query" == *youtube.com/watch* ]]; then
   echo "Looking up videos from page: '$query'"
   search_url=$query
+  mode="video"
+  div="content-wrapper"
+elif [[ "$query" == *youtube.com/user* ]]; then
+  echo "Looking up videos from user: '$query'"
+  search_url=$query
+  mode="user"
+  div="yt-lockup-content"
 else
   echo "Searching videos for: '$query'"
   search_url="https://www.youtube.com/results?search_query="$(echo $query | sed 's/ /%20/g') # would be good to properly encode the query
+  mode="search"
+  div="yt-lockup-content"
 fi
 
-# crawl
-index=1
+# Crawl
+idx=1
 while read line; do
-  url=$(echo $line | sed 's/.*href="\([^"]*\)".*/\1/')
-  title=$(echo $line | sed 's/ title=/\ntitle=/g' | grep 'title=' | head -n 1 | sed 's/.*title="\([^"]*\)".*/\1/')
-  duration=$(echo $line | grep "Duration" | sed 's/.*Duration: \([^\.,]*\).*/\1/')
-  if [[ -z $title ]]; then
-    echo "Failed extraction from: $line"
-  else
-    fullurl="https://www.youtube.com"$url
-    links[$index]="$fullurl"
-    echo -e "[$index]\t$fullurl\t$duration\t$title"
-    index=$(($index + 1))
+  if [[ -z $line ]]; then
+    continue
   fi
-done < <(curl --silent --header 'Accept-Language: en' "$search_url" | tr -d '\n' | sed 's;<div;\n<div;g' | egrep '"content-wrapper"|yt-lockup-content') # put newlines after each closing div and remove others
+
+  url=$(extract_url $line)
+  title=$(extract_title $line)
+  duration=$(extract_duration $line)
+
+  if [[ "$url" == *youtube.com/watch* ]]; then
+    type=Video
+    user=$(extract_user $line)
+  elif [[ "$url" == *youtube.com/user* ]]; then
+    type=User
+    user=$title
+  else
+    type=Other
+    user=$(extract_user $line)
+  fi
+
+  # Decode html special characters (can't be done earlier as it conflicts with xmllint)
+  user=$(decode_html_characters $user)
+  title=$(decode_html_characters $title)
+
+  # Padd everything to have a pretty allignment
+  duration=$(truncate_and_padd l 9 $duration)
+  title=$(truncate_and_padd r 70 $title) # Max is 100 but Youtube truncates at 70
+  type=$(truncate_and_padd r 8 $type)
+  user=$(truncate_and_padd r 24 $user)
+  index=$(truncate_and_padd l 5 "[$idx]")
+
+  printf "%s %s %s  %s  %s (%s)\n" "$type" "$user" "$duration" "$index" "$title" "$url"
+
+  links[$idx]="$url"
+  idx=$(($idx + 1))
+done < <(curl --silent --header 'Accept-Language: en' "$search_url" | tr -d '\n' | xmllint --html --xpath "//div[@class = \"$div\"]" - 2> /dev/null | sed "s/\(<div class=\"$div\"\)/\n\1/g")
 
 read -p 'Watchiou wanna see? ' index
 
