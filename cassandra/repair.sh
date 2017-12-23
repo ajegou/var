@@ -38,7 +38,7 @@ launch_time=$(date +%s)
 
 # This file will store the output of the 'nodetool repair' command. We use it to find token ranges that weren't properly repaired, and try to repair them a second time
 # directory=$(dirname $0)
-directory="/var/log/mediego/repair/"
+directory="/tmp/cassandra-repair/"
 mkdir -p $directory
 output=${directory}/repair-${keyspace}.${table}_$(date +%Y-%m-%d_%H:%M).log
 
