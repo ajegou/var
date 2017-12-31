@@ -73,8 +73,13 @@ function extract_user() {
 
 
 # Start here
-query=$@
 
+if [[ "$1" == "--autoplay" ]]; then
+  autoplay="$1"
+  shift
+fi
+
+query=$@
 if [[ -z $query ]]; then
   exit 1
 fi
@@ -135,7 +140,9 @@ while read line; do
   idx=$(($idx + 1))
 done < <(curl --silent --header 'Accept-Language: en' "$search_url" | tr -d '\n' | xmllint --html --xpath "//div[@class = \"$div\"]" - 2> /dev/null | sed "s/\(<div class=\"$div\"\)/\n\1/g")
 
-read -p 'Watchiou wanna see? ' index
+[[ ! -z $autoplay ]] && timeout="-t 5" # You have 5 seconds to choose
+read $timeout -p 'Watchiou wanna see? ' index
+[[ -z $index ]] && index=$((($RANDOM % ($idx - 2)) + 1)) && echo "$index (selected randomly)"
 
 link=${links[$index]}
 if [[ -z $link ]]; then
@@ -144,7 +151,7 @@ fi
 
 echo "Opening: $link"
 if [[ $link == */watch* ]]; then
-  youplay $link
+  youplay $autoplay $link
 else
-  yousearch $link
+  yousearch $autoplay $link
 fi

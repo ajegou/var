@@ -1,6 +1,12 @@
 #!/bin/bash
+
+if [[ "$1" == "--autoplay" ]]; then
+  autoplay="$1"
+  shift
+fi
+
 src=$1
 
 # play
 omxplayer -b -o local $(youtube-dl -g "$src")
-yousearch $1
+yousearch $autoplay $1
