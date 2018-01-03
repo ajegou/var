@@ -1,0 +1,31 @@
+---
+- hosts: pib
+  tasks:
+  - name: install packages
+    apt: name={{item}} state=latest
+    with_items:
+      - omxplayer
+      - youtube-dl
+      - libxml2-utils
+    become: true
+  - name: install scripts in /opt/
+    copy: src=scripts/{{item}} dest=/opt/{{item}} owner=root group=root mode=0755 backup=yes
+    with_items:
+      - play
+      - autoplay
+      - youplay
+      - yousearch
+    become: true
+  - name: symlink scipts from /usr/bin/
+    file: src=/opt/{{item}} dest=/usr/local/bin/{{item}} owner=root group=root mode=0755 state=link
+    with_items:
+      - play
+      - autoplay
+      - youplay
+      - yousearch
+    become: true
+
+  - name: set prompt
+    lineinfile: dest=~/.bashrc line='export PS1="\[\e[1;32m\][\h\[\e[m\] \[\e[0;33m\]\A\[\e[m\] \[\e[0;32m\]\W\[\e[m\] \[\e[1;31m\]\$?]$\[\e[m\] "'
+  - name: set bash aliases
+    copy: src=scripts/bash_aliases dest=~/.bash_aliases

@@ -1,0 +1,8 @@
+alias rm='rm -I'
+alias h='head -n 1'
+alias t='tail -n 1'
+alias ds='du -sh'
+alias lsa='ls -a'
+alias lrt='ls --color -lrtha --group-directories-first'
+alias lsd='ls --color -lhad .*/ && ls --color -lhad */'
+alias mkdit='mkdir'
