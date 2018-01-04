@@ -1,13 +1,19 @@
 ---
 - hosts: pib
   tasks:
-  - name: install packages
+  - name: install apt packages
     apt: name={{item}} state=latest
     with_items:
       - omxplayer
-      - youtube-dl
       - libxml2-utils
     become: true
+
+  - name: install pip packages
+    pip: name={{item}} state=latest
+    with_items:
+      - youtube-dl
+    become: true
+
   - name: install scripts in /opt/
     copy: src=scripts/{{item}} dest=/opt/{{item}} owner=root group=root mode=0755 backup=yes
     with_items:
@@ -16,7 +22,8 @@
       - youplay
       - yousearch
     become: true
-  - name: symlink scipts from /usr/bin/
+
+  - name: symlink scipts in /usr/local/bin/
     file: src=/opt/{{item}} dest=/usr/local/bin/{{item}} owner=root group=root mode=0755 state=link
     with_items:
       - play
