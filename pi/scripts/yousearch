@@ -73,6 +73,42 @@ function extract_user() {
   echo "$user"
 }
 
+function extract_line() {
+  local idx=$1
+  shift 1
+  line=$*
+  url=$(extract_url $line)
+  title=$(extract_title $line)
+  duration=$(extract_duration $line)
+
+  if [[ "$url" == *youtube.com/watch* ]]; then
+    type=Video
+    user=$(extract_user $line)
+  elif [[ "$url" == *youtube.com/user* ]]; then
+    type=User
+    user=$title
+  else
+    type=Other
+    user=$(extract_user $line)
+  fi
+
+  # Decode html special characters (can't be done earlier as it conflicts with xmllint)
+  user=$(decode_html_characters $user)
+  title=$(decode_html_characters $title)
+
+  # Padd everything to have a pretty allignment
+  duration=$(truncate_and_padd l 9 $duration)
+  title=$(truncate_and_padd r 70 $title) # Max is 100 but Youtube truncates at 70
+  type=$(truncate_and_padd r 8 $type)
+  user=$(truncate_and_padd r 24 $user)
+  index=$(truncate_and_padd l 5 "[$idx]")
+
+  display=$(printf "%s %s %s  %s  %s (%s)\n" "$type" "$user" "$duration" "$index" "$title" "$url")
+
+  links[$idx]="$url"
+  displays[$idx]="$display"
+}
+
 
 # Start here
 
@@ -110,42 +146,15 @@ while read line; do
   if [[ -z $line ]]; then
     continue
   fi
-
-  url=$(extract_url $line)
-  title=$(extract_title $line)
-  duration=$(extract_duration $line)
-
-  if [[ "$url" == *youtube.com/watch* ]]; then
-    type=Video
-    user=$(extract_user $line)
-  elif [[ "$url" == *youtube.com/user* ]]; then
-    type=User
-    user=$title
-  else
-    type=Other
-    user=$(extract_user $line)
-  fi
-
-  # Decode html special characters (can't be done earlier as it conflicts with xmllint)
-  user=$(decode_html_characters $user)
-  title=$(decode_html_characters $title)
-
-  # Padd everything to have a pretty allignment
-  duration=$(truncate_and_padd l 9 $duration)
-  title=$(truncate_and_padd r 70 $title) # Max is 100 but Youtube truncates at 70
-  type=$(truncate_and_padd r 8 $type)
-  user=$(truncate_and_padd r 24 $user)
-  index=$(truncate_and_padd l 5 "[$idx]")
-
-  display=$(printf "%s %s %s  %s  %s (%s)\n" "$type" "$user" "$duration" "$index" "$title" "$url")
-
-  links[$idx]="$url"
-  displays[$idx]="$display"
-
-  echo -e "${displays[$idx]}"
-
+  extract_line $idx $line
   idx=$(($idx + 1))
 done < <(curl --silent --header 'Accept-Language: en' "$search_url" | tr -d '\n' | xmllint --html --xpath "//div[@class = \"$div\"]" - 2> /dev/null | sed "s/\(<div class=\"$div\"\)/\n\1/g")
+
+idx=1
+while [[ ! -z ${displays[$idx]} ]]; do
+  echo -e "${displays[$idx]}"
+  idx=$(($idx + 1))
+done 
 
 read $timeout -p 'Watchiou wanna see? ' index
 [[ -z $index ]] && index=$((($RANDOM % ($idx - 2)) + 1)) && echo "$index (selected randomly)"
