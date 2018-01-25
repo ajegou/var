@@ -2,6 +2,8 @@
 
 # requires xmllint (package libxml2-utils) and youtube-dl (package youtube-dl, but should be updated frequently)
 
+autoplay_wait=5
+
 # Truncate strings that are too long, and space padd the ones that are too short
 function truncate_and_padd() {
   allign=$1
@@ -75,6 +77,7 @@ function extract_user() {
 # Start here
 
 if [[ "$1" == "--autoplay" ]]; then
+  timeout="-t $autoplay_wait"
   autoplay="$1"
   shift
 fi
@@ -140,7 +143,6 @@ while read line; do
   idx=$(($idx + 1))
 done < <(curl --silent --header 'Accept-Language: en' "$search_url" | tr -d '\n' | xmllint --html --xpath "//div[@class = \"$div\"]" - 2> /dev/null | sed "s/\(<div class=\"$div\"\)/\n\1/g")
 
-[[ ! -z $autoplay ]] && timeout="-t 5" # You have 5 seconds to choose
 read $timeout -p 'Watchiou wanna see? ' index
 [[ -z $index ]] && index=$((($RANDOM % ($idx - 2)) + 1)) && echo "$index (selected randomly)"
 
