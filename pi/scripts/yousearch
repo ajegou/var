@@ -145,15 +145,11 @@ done < <(curl --silent --header 'Accept-Language: en' "$search_url" | tr -d '\n'
 
 read $timeout -p 'Watchiou wanna see? ' index
 [[ -z $index ]] && index=$((($RANDOM % ($idx - 2)) + 1)) && echo "$index (selected randomly)"
+[[ ! -z ${links[$index]} ]] && toplay=${links[$index]} || toplay=$index
 
-link=${links[$index]}
-if [[ -z $link ]]; then
-  echo "Could not find an entry for '$index'"
-fi
-
-echo "Opening: $link"
-if [[ $link == */watch* ]]; then
-  youplay $autoplay $link
+echo "Opening: $toplay"
+if [[ $toplay == */watch* ]]; then
+  youplay $autoplay $toplay
 else
-  yousearch $autoplay $link
+  yousearch $autoplay $toplay
 fi
