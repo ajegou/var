@@ -137,9 +137,13 @@ while read line; do
   user=$(truncate_and_padd r 24 $user)
   index=$(truncate_and_padd l 5 "[$idx]")
 
-  printf "%s %s %s  %s  %s (%s)\n" "$type" "$user" "$duration" "$index" "$title" "$url"
+  display=$(printf "%s %s %s  %s  %s (%s)\n" "$type" "$user" "$duration" "$index" "$title" "$url")
 
   links[$idx]="$url"
+  displays[$idx]="$display"
+
+  echo -e "${displays[$idx]}"
+
   idx=$(($idx + 1))
 done < <(curl --silent --header 'Accept-Language: en' "$search_url" | tr -d '\n' | xmllint --html --xpath "//div[@class = \"$div\"]" - 2> /dev/null | sed "s/\(<div class=\"$div\"\)/\n\1/g")
 
