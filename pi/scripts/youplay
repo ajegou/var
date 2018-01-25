@@ -8,5 +8,5 @@ fi
 src=$1
 
 # play
-omxplayer -b -o local $(youtube-dl -g "$src")
+omxplayer -b -o local $(youtube-dl -g -f best "$src")
 yousearch $autoplay $1
