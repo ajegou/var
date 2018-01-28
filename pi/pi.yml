@@ -32,6 +32,10 @@
       - yousearch
     become: true
 
+  - name: copy youplay conf file
+    copy: src=scripts/play.conf dest=/home/pi/.play.conf owner=pi group=pi mode=0666 backup=yes
+    become: true
+
   - name: set prompt
     lineinfile: dest=~/.bashrc line='export PS1="\[\e[1;32m\][\h\[\e[m\] \[\e[0;33m\]\A\[\e[m\] \[\e[0;32m\]\W\[\e[m\] \[\e[1;31m\]\$?]$\[\e[m\] "'
   - name: set bash aliases
