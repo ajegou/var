@@ -93,6 +93,9 @@ function extract_line() {
     user=$(extract_user $line)
   fi
 
+  grep $'\t'$url$'\t' "$history_file" > /dev/null 2>&1
+  [[ $? == 0 ]] && seen="*" || seen=" "
+
   # Decode html special characters (can't be done earlier as it conflicts with xmllint)
   user=$(decode_html_characters $user)
   title=$(decode_html_characters $title)
@@ -102,7 +105,7 @@ function extract_line() {
   title=$(truncate_and_padd r 70 $title) # Max is 100 but Youtube truncates at 70
   type=$(truncate_and_padd r 8 $type)
   user=$(truncate_and_padd r 24 $user)
-  index=$(truncate_and_padd l 5 "[$idx]")
+  index=$(truncate_and_padd l 5 "[$idx]$seen")
 
   if [[ "$display_urls" = true ]]; then
     display=$(printf "%s %s %s  %s  %s (%s)\n" "$type" "$user" "$duration" "$index" "$title" "$url")
