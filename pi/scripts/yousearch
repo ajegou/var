@@ -93,8 +93,14 @@ function extract_line() {
     user=$(extract_user $line)
   fi
 
-  grep $'\t'$url$'\t' "$history_file" > /dev/null 2>&1
-  [[ $? == 0 ]] && seen="*" || seen=" "
+  if grep $'\t'$url$'\t' "$history_file" > /dev/null 2>&1; then
+    seen="true"
+    seen_symb="*"
+  else
+    seen="false"
+    seen_symb=" "
+    not_seen+=($idx)
+  fi
 
   # Decode html special characters (can't be done earlier as it conflicts with xmllint)
   user=$(decode_html_characters $user)
@@ -105,7 +111,7 @@ function extract_line() {
   title=$(truncate_and_padd r 70 $title) # Max is 100 but Youtube truncates at 70
   type=$(truncate_and_padd r 8 $type)
   user=$(truncate_and_padd r 24 $user)
-  index=$(truncate_and_padd l 5 "[$idx]$seen")
+  index=$(truncate_and_padd l 5 "[$idx]$seen_symb")
 
   if [[ "$display_urls" = true ]]; then
     display=$(printf "%s %s %s  %s  %s (%s)\n" "$type" "$user" "$duration" "$index" "$title" "$url")
@@ -117,6 +123,16 @@ function extract_line() {
   displays[$idx]="$display"
 }
 
+
+function select_random_video() {
+  n_not_seen=${#not_seen[@]}
+  if [[ $n_not_seen -gt 0 ]] && [[ "$autoplay_seen" != "true" ]]; then
+    i=$(($RANDOM % $n_not_seen))
+    echo ${not_seen[$i]}
+  else
+    echo $((($RANDOM % ($idx - 1)) + 1))
+  fi
+}
 
 # Start here
 
@@ -152,6 +168,7 @@ fi
 idx=1
 declare -A links
 declare -A displays
+declare -a not_seen
 while read line; do
   if [[ -z $line ]]; then
     continue
@@ -167,10 +184,9 @@ while [[ ! -z ${displays[$idx]} ]]; do
 done 
 
 read $timeout -p 'Watchiou wanna see? ' index
-[[ -z $index ]] && index=$((($RANDOM % ($idx - 2)) + 1)) && echo "$index (selected randomly)"
+[[ -z $index ]] && index=$(select_random_video) && echo "$index (selected randomly)"
 [[ ! -z ${links[$index]} ]] && toplay=${links[$index]} || toplay=$index
 
-echo "Opening: $toplay"
 if [[ $toplay == */watch* ]]; then
   youplay $autoplay $toplay
 else
