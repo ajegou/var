@@ -3,6 +3,9 @@
 # requires xmllint (package libxml2-utils) and youtube-dl (package youtube-dl, but should be updated frequently)
 
 autoplay_wait=5
+conf_file=~/.play.conf
+[[ -f $conf_file ]] && source $conf_file
+
 
 # Truncate strings that are too long, and space padd the ones that are too short
 function truncate_and_padd() {

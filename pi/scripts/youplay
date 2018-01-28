@@ -1,5 +1,8 @@
 #!/bin/bash
 
+conf_file=~/.play.conf
+[[ -f $conf_file ]] && source $conf_file
+
 if [[ "$1" == "--autoplay" ]]; then
   autoplay="$1"
   shift
