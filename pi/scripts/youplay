@@ -13,6 +13,7 @@ fi
 src=$*
 
 # play
-url=$(youtube-dl -g -f best "$src")
+[[ "$audio_only" == "true" ]] && format="bestaudio" || format="best"
+url=$(youtube-dl -g -f $format "$src")
 ${player} "$url"
 yousearch $autoplay $src
