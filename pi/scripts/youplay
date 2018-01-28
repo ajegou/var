@@ -10,7 +10,7 @@ if [[ "$1" == "--autoplay" ]]; then
   shift
 fi
 
-src=$1
+src=$*
 
 # play
 url=$(youtube-dl -g -f best "$src")
