@@ -1,5 +1,7 @@
 #!/bin/bash
 
+player='omxplayer' # default valid for pi
+
 conf_file=~/.play.conf
 [[ -f $conf_file ]] && source $conf_file
 
@@ -11,5 +13,6 @@ fi
 src=$1
 
 # play
-omxplayer -b -o local $(youtube-dl -g -f best "$src")
-yousearch $autoplay $1
+url=$(youtube-dl -g -f best "$src")
+${player} "$url"
+yousearch $autoplay $src

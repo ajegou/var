@@ -2,10 +2,8 @@
 
 # requires xmllint (package libxml2-utils) and youtube-dl (package youtube-dl, but should be updated frequently)
 
-autoplay_wait=5
 conf_file=~/.play.conf
 [[ -f $conf_file ]] && source $conf_file
-
 
 # Truncate strings that are too long, and space padd the ones that are too short
 function truncate_and_padd() {
@@ -106,7 +104,11 @@ function extract_line() {
   user=$(truncate_and_padd r 24 $user)
   index=$(truncate_and_padd l 5 "[$idx]")
 
-  display=$(printf "%s %s %s  %s  %s (%s)\n" "$type" "$user" "$duration" "$index" "$title" "$url")
+  if [[ "$display_urls" = true ]]; then
+    display=$(printf "%s %s %s  %s  %s (%s)\n" "$type" "$user" "$duration" "$index" "$title" "$url")
+  else
+    display=$(printf "%s %s %s  %s  %s\n" "$type" "$user" "$duration" "$index" "$title")
+  fi
 
   links[$idx]="$url"
   displays[$idx]="$display"
