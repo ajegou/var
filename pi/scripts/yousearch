@@ -147,6 +147,8 @@ fi
 
 # Crawl
 idx=1
+declare -A links
+declare -A displays
 while read line; do
   if [[ -z $line ]]; then
     continue
