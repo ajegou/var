@@ -10,12 +10,12 @@ if [[ "$1" == "--autoplay" ]]; then
   shift
 fi
 
-[[ "$audio_only" == "true" ]] && format="bestaudio" || format="mp4"
+[[ "$audio_only" == "true" ]] && video_format="bestaudio"
 
 src="$*"
 while read id; do # Loop in case we are reading a playlist
   url="https://www.youtube.com/watch?v=$id"
-  info=$(youtube-dl -e -g -f $format "$url")
+  info=$(youtube-dl --get-title --get-url --format $video_format "$url")
   title=$(echo -e "$info" | head -1)
   stream=$(echo -e "$info" | tail -1)
 
