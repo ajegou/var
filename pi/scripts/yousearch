@@ -183,19 +183,19 @@ while [[ ! -z ${displays[$idx]} ]]; do
   idx=$(($idx + 1))
 done 
 
-read $timeout -p 'Watchiou wanna see? ' index
-[[ -z $index ]] && index=$(select_random_video) && echo "$index (selected randomly)"
+read $timeout -p 'Watchiou wanna see? ' input
+[[ -z $input ]] && input=$(select_random_video) && echo "$input (selected randomly)"
 
-if [[ "$index" = "/r" ]]; then # replay
-  toplay=$query
-elif [[ ! -z ${links[$index]} ]]; then # selected from suggestion
-  toplay=${links[$index]}
+if [[ "$input" = "/r" ]]; then # replay
+  todo=$query
+elif [[ ! -z ${links[$input]} ]]; then # selected from suggestion
+  todo=${links[$input]}
 else # new search
-  toplay=$index
+  todo=$index
 fi
 
-if [[ $toplay == */watch* ]]; then
-  youplay $autoplay $toplay
+if [[ $todo == */watch* ]]; then
+  youplay $autoplay $todo
 else
-  yousearch $autoplay $toplay
+  yousearch $autoplay $todo
 fi
