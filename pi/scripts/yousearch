@@ -83,7 +83,7 @@ function extract_line() {
   duration=$(extract_duration $line)
 
   if [[ "$url" == *youtube.com/watch* ]]; then
-    type=Video
+    [[ "$url" == *youtube.com/watch*list=* ]] && type=Playlist || type=Video
     user=$(extract_user $line)
   elif [[ "$url" == *youtube.com/user* ]]; then
     type=User

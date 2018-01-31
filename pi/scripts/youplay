@@ -10,15 +10,24 @@ if [[ "$1" == "--autoplay" ]]; then
   shift
 fi
 
-src=$*
+src="$*"
+while read id; do # Loop in case we are reading a playlist
+  url="https://www.youtube.com/watch?v=$id"
+  title=$(youtube-dl -e "$url")
+  echo -e "Playing: $title ($url)"
 
-title=$(youtube-dl -e "$src")
-echo -e "Playing: $title ($src)"
+  # Record history
+  ts=$(date '+%s')
+  date=$(date '+%Y-%m-%d %H:%M:%S')
+  [[ "$record_history" == "true" ]] && echo -e "$ts\t$date\t$video\t$title" >> "$history_file"
 
-[[ "$record_history" == "true" ]] && echo -e "$(date '+%s\t%Y-%m-%d %H:%M:%S')\t$src\t$title" >> "$history_file"
+  # Play
+  [[ "$audio_only" == "true" ]] && format="bestaudio" || format="best"
+  stream=$(youtube-dl -g -f $format "$url")
+  ${player} "$stream" > /dev/null 2>&1 </dev/tty
+  exit_code=$?
+  # For playlists: break the loop if the video is stopped with a ctrl-c or error
+  [[ $exit_code != 0 && $exit_code != 3 ]] && break # omxplayer exits with 0 when stopped with 'q' 
+done < <(youtube-dl --get-id "$src")
 
-# play
-[[ "$audio_only" == "true" ]] && format="bestaudio" || format="best"
-url=$(youtube-dl -g -f $format "$src")
-${player} "$url" > /dev/null 2>&1
-yousearch $autoplay $src
+yousearch $autoplay "$src"
