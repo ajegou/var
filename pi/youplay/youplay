@@ -17,7 +17,7 @@ while read id; do # Loop in case we are reading a playlist
   # Record history
   ts=$(date '+%s')
   date=$(date '+%Y-%m-%d %H:%M:%S')
-  [[ "$record_history" == "true" ]] && echo -e "$ts\t$date\t$video\t$title" >> "$history_file"
+  [[ "$record_history" == "true" ]] && echo -e "$ts\t$date\t$url\t$title" >> "$history_file"
 
   # Play
   echo -e "Playing: $title ($url)"

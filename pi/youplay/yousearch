@@ -183,7 +183,7 @@ idx=1
 while [[ ! -z ${displays[$idx]} ]]; do
   echo -e "${displays[$idx]}"
   idx=$(($idx + 1))
-done 
+done
 
 [[ "$autoplay" == "true" ]] && timeout="-t $autoplay_delay"
 read $timeout -p 'Watchiou wanna see? ' input
@@ -196,7 +196,7 @@ if [[ "$input" = "/r" ]]; then # replay
 elif [[ ! -z ${links[$input]} ]]; then # selected from suggestion
   todo=${links[$input]}
 else # new search
-  todo=$*
+  todo=$input
 fi
 
 if [[ $todo == */watch* ]]; then
