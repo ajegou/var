@@ -22,12 +22,12 @@ while read id; do # Loop in case we are reading a playlist
   [[ "$record_history" == "true" ]] && echo -e "$ts\t$date\t$video\t$title" >> "$history_file"
 
   # Play
-  [[ "$audio_only" == "true" ]] && format="bestaudio" || format="best"
+  [[ "$audio_only" == "true" ]] && format="bestaudio" || format="mp4"
   stream=$(youtube-dl -g -f $format "$url")
   ${player} "$stream" > /dev/null 2>&1 </dev/tty
   exit_code=$?
   # For playlists: break the loop if the video is stopped with a ctrl-c or error
-  [[ $exit_code != 0 && $exit_code != 3 ]] && break # omxplayer exits with 0 when stopped with 'q' 
+  [[ $exit_code != 0 && $exit_code != 3 ]] && break # omxplayer exits with 0 when stopped with 'q'
 done < <(youtube-dl --get-id "$src")
 
 yousearch $autoplay "$src"
