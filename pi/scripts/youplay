@@ -10,11 +10,15 @@ if [[ "$1" == "--autoplay" ]]; then
   shift
 fi
 
+[[ "$audio_only" == "true" ]] && format="bestaudio" || format="mp4"
+
 src="$*"
 while read id; do # Loop in case we are reading a playlist
   url="https://www.youtube.com/watch?v=$id"
-  title=$(youtube-dl -e "$url")
-  echo -e "Playing: $title ($url)"
+  info=$(youtube-dl -e -g -f $format "$url")
+  title=$(echo -e "$info" | head -1)
+  stream=$(echo -e "$info" | tail -1)
+
 
   # Record history
   ts=$(date '+%s')
@@ -22,8 +26,7 @@ while read id; do # Loop in case we are reading a playlist
   [[ "$record_history" == "true" ]] && echo -e "$ts\t$date\t$video\t$title" >> "$history_file"
 
   # Play
-  [[ "$audio_only" == "true" ]] && format="bestaudio" || format="mp4"
-  stream=$(youtube-dl -g -f $format "$url")
+  echo -e "Playing: $title ($url)"
   ${player} "$stream" > /dev/null 2>&1 </dev/tty
   exit_code=$?
   # For playlists: break the loop if the video is stopped with a ctrl-c or error
