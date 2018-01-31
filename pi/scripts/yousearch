@@ -2,8 +2,9 @@
 
 # requires xmllint (package libxml2-utils) and youtube-dl (package youtube-dl, but should be updated frequently)
 
-conf_file=~/.play.conf
-[[ -f $conf_file ]] && source $conf_file
+youplay_folder=$(readlink -f "${BASH_SOURCE[0]}" | xargs dirname)
+[[ ! -f $youplay_folder/youplay_args ]] && { echo "Could not find args parser!"; exit 1; } 
+source $youplay_folder/youplay_args
 
 # Truncate strings that are too long, and space padd the ones that are too short
 function truncate_and_padd() {
@@ -123,7 +124,6 @@ function extract_line() {
   displays[$idx]="$display"
 }
 
-
 function select_random_video() {
   n_not_seen=${#not_seen[@]}
   if [[ $n_not_seen -gt 0 ]] && [[ "$autoplay_seen" != "true" ]]; then
@@ -134,13 +134,15 @@ function select_random_video() {
   fi
 }
 
-# Start here
+# extract additional arguments if any
+function extract_additional_args() {
+  # this is done in a funtion so shif can operate on the arguments
+  [[ $* = -* ]] && source $youplay_folder/youplay_args
+  input=$*
+}
 
-if [[ "$1" == "--autoplay" ]]; then
-  timeout="-t $autoplay_wait"
-  autoplay="$1"
-  shift
-fi
+
+# Start here
 
 query=$@
 if [[ -z $query ]]; then
@@ -183,19 +185,22 @@ while [[ ! -z ${displays[$idx]} ]]; do
   idx=$(($idx + 1))
 done 
 
+[[ "$autoplay" == "true" ]] && timeout="-t $autoplay_delay"
 read $timeout -p 'Watchiou wanna see? ' input
 [[ -z $input ]] && input=$(select_random_video) && echo "$input (selected randomly)"
+
+extract_additional_args $input
 
 if [[ "$input" = "/r" ]]; then # replay
   todo=$query
 elif [[ ! -z ${links[$input]} ]]; then # selected from suggestion
   todo=${links[$input]}
 else # new search
-  todo=$index
+  todo=$*
 fi
 
 if [[ $todo == */watch* ]]; then
-  youplay $autoplay $todo
+  $youplay_folder/youplay $todo
 else
-  yousearch $autoplay $todo
+  $youplay_folder/yousearch $todo
 fi

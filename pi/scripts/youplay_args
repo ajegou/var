@@ -1,0 +1,48 @@
+#!/bin/bash
+if [[ "$conf_exported" != "true" ]]; then
+  youplay_folder=$(readlink -f "${BASH_SOURCE[0]}" | xargs dirname)
+  [[ ! -f $youplay_folder/youplay.conf ]] && { echo "Could not find youplay.conf!"; exit 1; }
+  source $youplay_folder/youplay.conf
+fi
+while getopts ":twad:sv" opt; do
+  case ${opt} in
+    t )
+      echo "Enabling tiny mode"
+      export tiny=true
+      ;;
+    w )
+      echo "Enabling wide mode"
+      export tiny=false
+      ;;
+    a )
+      echo "Enabling autoplay"
+      export autoplay=true
+      ;;
+    d )
+      echo "Setting autoplay delay to $OPTARG"
+      if [[ "$OPTARG" =~ ^[0-9]+$ ]]; then
+        export autoplay_delay=$OPTARG
+      else
+        echo "Invalid value for autoplay delay: $OPTARG"
+      fi
+      ;;
+    s )
+      echo "Enable audio only"
+      export audio_only=true
+      ;;
+    v )
+      echo "Enable video"
+      export audio_only=false
+      ;;
+    \? )
+      echo "Invalid option: $OPTARG" 1>&2
+      exit 1
+      ;;
+    : )
+      echo "Invalid option: $OPTARG requires an argument" 1>&2
+      exit 1
+      ;;
+  esac
+done
+export conf_exported=true
+shift $((OPTIND -1))

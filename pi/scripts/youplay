@@ -1,14 +1,8 @@
 #!/bin/bash
 
-player='omxplayer' # default valid for pi
-
-conf_file=~/.play.conf
-[[ -f $conf_file ]] && source $conf_file
-
-if [[ "$1" == "--autoplay" ]]; then
-  autoplay="$1"
-  shift
-fi
+youplay_folder=$(readlink -f "${BASH_SOURCE[0]}" | xargs dirname)
+[[ ! -f $youplay_folder/youplay_args ]] && { echo "Could not find args parser!"; exit 1; } 
+source $youplay_folder/youplay_args
 
 [[ "$audio_only" == "true" ]] && video_format="bestaudio"
 
@@ -33,4 +27,4 @@ while read id; do # Loop in case we are reading a playlist
   [[ $exit_code != 0 && $exit_code != 3 ]] && break # omxplayer exits with 0 when stopped with 'q'
 done < <(youtube-dl --get-id "$src")
 
-yousearch $autoplay "$src"
+$youplay_folder/yousearch "$src"
