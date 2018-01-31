@@ -35,7 +35,7 @@ function decode_html_characters() {
 function extract_title() {
   # Using string(//a/@title) causes some improper decoding of the title, so we have to use //a/@title and get the text by hand
   title=$(echo $* | xmllint --html --xpath '(//a/@title)[1]' -)
-  title=$(echo $title | sed 's/^title="\(.*\)"$/\1/')
+  title=$(echo $title | sed "s/^title=['\"]\(.*\)['\"]$/\1/")
   # Remove trailing spaces
   title=$(echo $title | sed 's/^ *//' | sed 's/ *$//')
   echo "$title"
