@@ -21,6 +21,8 @@
       - autoplay
       - youplay
       - yousearch
+      - youplay_args
+      - youplay.conf
     become: true
 
   - name: symlink scipts in /usr/local/bin/
@@ -32,12 +34,13 @@
       - yousearch
     become: true
 
-  - name: copy youplay conf file
-    copy: src=scripts/play.conf dest=/home/pi/.play.conf owner=pi group=pi mode=0666 backup=yes
+  - name: set omxplayer as default player
+    lineinfile: dest=/opt/youplay.conf line='export player="omxplayer -b -o local"'
     become: true
 
-  - name: set omxplayer as default player
-    lineinfile: dest=~/.play.conf line='player="omxplayer -b -o local"'
+  - name: set default format to mp4
+    lineinfile: dest=/opt/youplay.conf line='export video_format=mp4'
+    become: true
 
   - name: set prompt
     lineinfile: dest=~/.bashrc line='export PS1="\[\e[1;32m\][\h\[\e[m\] \[\e[0;33m\]\A\[\e[m\] \[\e[0;32m\]\W\[\e[m\] \[\e[1;31m\]\$?]$\[\e[m\] "'
