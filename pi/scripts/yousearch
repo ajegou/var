@@ -11,7 +11,9 @@ function truncate_and_padd() {
   size=$2
   shift 2
   text=$*
-  if [[ ${#text} -gt $size ]]; then
+  if [[ $size -le 3 ]]; then
+    text="${text:0:$size}"
+  elif [[ ${#text} -gt $size ]]; then
     truncto=$(($size - 3))
     text="${text:0:$truncto}..."
   else
@@ -107,16 +109,21 @@ function extract_line() {
   title=$(decode_html_characters $title)
 
   # Padd everything to have a pretty allignment
-  duration=$(truncate_and_padd l 9 $duration)
-  title=$(truncate_and_padd r 70 $title) # Max is 100 but Youtube truncates at 70
-  type=$(truncate_and_padd r 8 $type)
-  user=$(truncate_and_padd r 24 $user)
-  index=$(truncate_and_padd l 5 "[$idx]$seen_symb")
-
-  if [[ "$display_urls" = true ]]; then
-    display=$(printf "%s %s %s  %s  %s (%s)\n" "$type" "$user" "$duration" "$index" "$title" "$url")
+  if [[ "$tiny" = true ]]; then
+    # Fit everything in 80 characters
+    type=$(truncate_and_padd r 1 $type)
+    user=$(truncate_and_padd r 16 $user)
+    duration=$(truncate_and_padd l 9 $duration)
+    index=$(truncate_and_padd l 5 "[$idx]$seen_symb")
+    title=$(truncate_and_padd r 45 $title)
+    display=$(printf "%s %s %s %s %s\n" "$type" "$user" "$duration" "$index" "$title")
   else
-    display=$(printf "%s %s %s  %s  %s\n" "$type" "$user" "$duration" "$index" "$title")
+    type=$(truncate_and_padd r 8 $type)
+    user=$(truncate_and_padd r 24 $user)
+    duration=$(truncate_and_padd l 9 $duration)
+    index=$(truncate_and_padd l 5 "[$idx]$seen_symb")
+    title=$(truncate_and_padd r 70 $title) # Max is 100 but Youtube truncates at 70
+    display=$(printf "%s %s %s  %s  %s (%s)\n" "$type" "$user" "$duration" "$index" "$title" "$url")
   fi
 
   links[$idx]="$url"
