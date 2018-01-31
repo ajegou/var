@@ -185,7 +185,14 @@ done
 
 read $timeout -p 'Watchiou wanna see? ' index
 [[ -z $index ]] && index=$(select_random_video) && echo "$index (selected randomly)"
-[[ ! -z ${links[$index]} ]] && toplay=${links[$index]} || toplay=$index
+
+if [[ "$index" = "/r" ]]; then # replay
+  toplay=$query
+elif [[ ! -z ${links[$index]} ]]; then # selected from suggestion
+  toplay=${links[$index]}
+else # new search
+  toplay=$index
+fi
 
 if [[ $toplay == */watch* ]]; then
   youplay $autoplay $toplay
