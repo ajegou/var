@@ -19,9 +19,9 @@ fi
 
 if [[ -z $subtitle ]]; then
   echo "Playing without subtitles"
-  omxplayer -b -o local "$file_name"
+  omxplayer -b -o hdmi -r "$file_name"
 else
   echo "Playing with the following subtitles: $subtitle"
-  omxplayer -b -o local --subtitles "$subtitle" "$file_name"
+  omxplayer -b -o hdmi -r --subtitles "$subtitle" "$file_name"
 fi
 
