@@ -1,0 +1,66 @@
+---
+- hosts: all
+  tasks:
+  - name: Install packages
+    apt: name={{item}} state=latest
+    with_items:
+      - ufw
+    become: true
+
+  - name: Set prompt
+    lineinfile: dest=~/.bashrc line='export PS1="\[\e[1;32m\][\h\[\e[m\] \[\e[0;33m\]\A\[\e[m\] \[\e[0;32m\]\W\[\e[m\] \[\e[1;31m\]\$?]$\[\e[m\] "'
+
+  - name: Set bash aliases
+    copy: src=scripts/bash_aliases dest=~/.bash_aliases
+
+  - name: Creates .ssh folder
+    file: path=/home/pi/.ssh/ state=directory
+
+  - name: Install authorized_keys
+    copy: src=pi-files/authorized_keys dest=/home/pi/.ssh/authorized_keys owner=pi group=pi mode=0644
+
+  - name: Forbid password authentification
+    lineinfile: dest=/etc/ssh/sshd_config line='PasswordAuthentication no'
+    become: yes
+
+  - name: Restart ssh
+    service: name=ssh state=restarted
+    become: yes
+
+  - name: Set hostname
+    hostname:
+      name: "{{ hostname }}"
+    when: hostname is defined
+    become: yes
+
+  - name: Remove raspberrypi in /etc/hosts
+    lineinfile:
+      dest: /etc/hosts
+      state: present
+      line: '127.0.1.1	{{ hostname }}'
+    when: hostname is defined
+    become: yes
+
+  - name: Remove raspberrypi from /etc/hosts
+    lineinfile:
+      dest: /etc/hosts
+      state: absent
+      line: '127.0.1.1	raspberrypi'
+    become: yes
+
+  - name: Allow ssh connection
+    ufw:
+      rule: limit
+      port: ssh
+      proto: tcp
+    become: yes
+
+  - name: Reject everything else
+    ufw:
+      state: enabled
+      policy: deny
+    become: yes
+
+  - name: Reboot
+    shell: "/sbin/shutdown -r"
+    become: yes
