@@ -4,6 +4,9 @@
     - name: Check ansible version
       assert:
         that: "ansible_version.full is version_compare('2.2', '>=')"
+    - name: Check public hostname is defined
+      assert:
+        that: public_hostname is defined
   tasks:
   - name: Install packages
     apt: name={{item}} state=latest
@@ -51,6 +54,14 @@
       remote_src: yes
       owner: www-data
       group: www-data
+    become: yes
+
+  - name: Set owncloud trusted domain
+    replace:
+      dest: /var/www/html/owncloud/config/config.php
+      regexp: "0 => '.*',"
+      replace: "0 => '{{ public_hostname }}',"
+    when: public_hostname is defined
     become: yes
 
   - name: Set owncloud apache config

@@ -1,5 +1,9 @@
 ---
 - hosts: all
+  pre_tasks:
+    - name: Check ansible version
+      assert:
+        that: "ansible_version.full is version_compare('2.2', '>=')"
   tasks:
   - name: Install packages
     apt: name={{item}} state=latest
