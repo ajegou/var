@@ -49,7 +49,6 @@
   - name: Extract owncloud
     unarchive:
       src: /tmp/owncloud-10.0.10.tar.bz2
-      # src: https://download.owncloud.org/community/owncloud-10.0.10.tar.bz2
       dest: /var/www/html/
       remote_src: yes
       owner: www-data

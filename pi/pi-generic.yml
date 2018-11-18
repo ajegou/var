@@ -12,23 +12,53 @@
     become: true
 
   - name: Set prompt
-    lineinfile: dest=~/.bashrc line='export PS1="\[\e[1;32m\][\h\[\e[m\] \[\e[0;33m\]\A\[\e[m\] \[\e[0;32m\]\W\[\e[m\] \[\e[1;31m\]\$?]$\[\e[m\] "'
+    lineinfile:
+      dest: ~/.bashrc
+      line: 'export PS1="\[\e[1;32m\][\h\[\e[m\] \[\e[0;33m\]\A\[\e[m\] \[\e[0;32m\]\W\[\e[m\] \[\e[1;31m\]\$?]$\[\e[m\] "'
 
   - name: Set bash aliases
-    copy: src=scripts/bash_aliases dest=~/.bash_aliases
+    copy:
+      src: scripts/bash_aliases
+      dest: ~/.bash_aliases
 
   - name: Creates .ssh folder
-    file: path=/home/pi/.ssh/ state=directory
+    file:
+      path: /home/pi/.ssh/
+      state: directory
 
   - name: Install authorized_keys
-    copy: src=pi-files/authorized_keys dest=/home/pi/.ssh/authorized_keys owner=pi group=pi mode=0644
+    copy:
+      src: pi-files/authorized_keys
+      dest: /home/pi/.ssh/authorized_keys
+      owner: pi
+      group: pi
+      mode: 0644
 
-  - name: Forbid password authentification
-    lineinfile: dest=/etc/ssh/sshd_config line='PasswordAuthentication no'
+  - name: Disable PasswordAuthentication
+    lineinfile:
+      dest: /etc/ssh/sshd_config
+      line: 'PasswordAuthentication no'
+      state: present
+    become: yes
+
+  - name: Disable ChallengeResponseAuthentication
+    lineinfile:
+      dest: /etc/ssh/sshd_config
+      line: 'ChallengeResponseAuthentication no'
+      state: present
+    become: yes
+
+  - name: Disable UsePAM
+    lineinfile:
+      dest: /etc/ssh/sshd_config
+      line: 'UsePAM no'
+      state: present
     become: yes
 
   - name: Restart ssh
-    service: name=ssh state=restarted
+    service:
+      name: ssh
+      state: restarted
     become: yes
 
   - name: Set hostname
