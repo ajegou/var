@@ -1,0 +1,75 @@
+#!/bin/bash
+
+if [[ -z $1 ]]; then
+  echo "Usage: $(basename "$0") <PATH>"
+  echo "  Will explore all files from <PATH> to print their audio and video codecs, coloring them based on their compatibility with a raspberry pi"
+  exit 1
+fi
+
+PATH_ARG="$1"
+PAD_LENGTH=80
+
+good () {
+  printf '\e[1;32m%s\e[m' "$*"
+}
+
+bad () {
+  printf '\e[1;31m%s\e[m' "$*"
+}
+
+display_info () {
+  local filename
+  filename=$(basename "$1")
+
+  video_formats=$(mediainfo --Output='General;%Video_Format_List%' "$1")
+  declare -a checked_video_formats
+  while read -r video_format; do
+    case "$video_format" in
+      'HEVC')
+        checked_video_formats+=("$(bad "${video_format}")")
+        ;;
+      'MPEG-4 Visual'|AVC)
+        checked_video_formats+=("$(good "${video_format}")")
+        ;;
+      *)
+        checked_video_formats+=("${video_format}")
+        ;;
+    esac
+  done < <(echo "$video_formats" | tr '/' '\n' | awk '{$1=$1;print}')
+  pretty_checked_video_formats=$(IFS=/ ; echo "${checked_video_formats[*]}")
+
+  audio_formats=$(mediainfo --Output='General;%Audio_Format_List%' "$1")
+  declare -a checked_audio_formats
+  while read -r audio_format; do
+    case "$audio_format" in
+      '')
+        checked_audio_formats+=("$(bad "${audio_format}")")
+        ;;
+      'MPEG Audio'|'AAC LC'|AC-3|E-AC-3|'E-AC-3 JOC')
+        checked_audio_formats+=("$(good "${audio_format}")")
+        ;;
+      *)
+        checked_audio_formats+=("$audio_format")
+        ;;
+    esac
+  done < <(echo "$audio_formats" | tr '/' '\n' | awk '{$1=$1;print}')
+  pretty_checked_audio_formats=$(IFS=/ ; echo "${checked_audio_formats[*]}")
+  
+  audio_count=$(mediainfo --Output='General;%AudioCount%' "$1")
+  video_count=$(mediainfo --Output='General;%VideoCount%' "$1")
+
+  data="${video_count} Video:[${pretty_checked_video_formats}] -- ${audio_count} Audio: [${pretty_checked_audio_formats}]"
+  printf "  %-${PAD_LENGTH}s%s\n" "$filename" "$data"
+  
+}
+
+while read -r filename; do
+  if [ -d "$filename" ]; then
+     echo "$filename:"
+     continue
+  elif [[ "$filename" =~ \.(srt|txt|sub|idx|png|jpg) ]]; then # subtitles or other files
+    continue;
+  else
+    display_info "$filename"
+  fi
+done < <(find "$PATH_ARG")
